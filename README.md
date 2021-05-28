@@ -7,6 +7,7 @@ Food quality is a crucial aspect of human health and food quality control helps 
 Goal of this project is to investigate ability to translate digital images to multispectral.
 We considered several approaches : [Pix2Pix](https://arxiv.org/pdf/1611.07004.pdf) | [CycleGan](https://arxiv.org/pdf/1703.10593.pdf) | [Pix2PixHD](https://arxiv.org/pdf/1711.11585.pdf) | Pointwise(CNN with kern_size=1).
 
+[Report](Final_Project_DL.pdf)
 
 ## Prerequisites
 - Linux or macOS
