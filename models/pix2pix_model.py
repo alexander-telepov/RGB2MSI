@@ -106,21 +106,14 @@ class Pix2PixModel(BaseModel):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
         self.fake_B = self.netG(self.real_A)
 
-    def inference(self, patch_size=256, patch_overlap=0, validation_batch_size=2, num_workers=2):
-        subject = tio.Subject({'image': tio.Image(self.real_A.squeeze(0), tio.INTENSITY)})
-        grid_sampler = tio.inference.GridSampler(subject, patch_size, patch_overlap)
-        patch_loader = torch.utils.data.DataLoader(grid_sampler, batch_size=validation_batch_size,
-                                                   num_workers=num_workers)
-        aggregator = tio.inference.GridAggregator(grid_sampler)
+    def inference(self, patch_size=256, patch_stride=150, validation_batch_size=2, num_workers=2):
+        from dpipe.predict import patches_grid
 
-        for patches_batch in patch_loader:
-            inputs = patches_batch['image'][DATA].to(self.device)
-            locations = patches_batch['location']
-            pred_patch = self.netG(inputs.float())
+        @patches_grid(patch_size, patch_stride, axis=(-1, -2), padding_values=None)
+        def inference(image):
+            return self.netG(image)
 
-            aggregator.add_batch(pred_patch, locations)
-
-        self.fake_B = aggregator.get_output_tensor().unsqueeze(0)
+        self.fake_B = inference(self.real_A)
 
     def backward_D(self):
         """Calculate GAN loss for the discriminator"""
