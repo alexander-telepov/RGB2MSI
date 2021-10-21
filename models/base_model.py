@@ -68,7 +68,12 @@ class BaseModel(ABC):
 
     @abstractmethod
     def forward(self):
-        """Run forward pass; called by both functions <optimize_parameters> and <test>."""
+        """Run forward pass; called by <optimize_parameters> function."""
+        pass
+
+    @abstractmethod
+    def inference(self):
+        """Inference on sample; called by <test>. function"""
         pass
 
     @abstractmethod
@@ -103,7 +108,7 @@ class BaseModel(ABC):
         It also calls <compute_visuals> to produce additional visualization results
         """
         with torch.no_grad():
-            self.forward()
+            self.inference()
             self.compute_visuals()
 
     def compute_visuals(self):

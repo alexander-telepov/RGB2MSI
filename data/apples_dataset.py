@@ -20,6 +20,8 @@ class ApplesDataset(BaseDataset):
         self.msi_paths = msi_paths
         self.image_paths = [*rgb_paths, *msi_paths]
         transform = A.Compose([
+            # TODO: or (256, 320)?
+            A.RandomCrop(256, 256, p=1.0),
             A.VerticalFlip(p=0.5),
             A.HorizontalFlip(p=0.5),
             A.ShiftScaleRotate(shift_limit=0.4, scale_limit=0.3, rotate_limit=90, p=0.5),
@@ -27,17 +29,16 @@ class ApplesDataset(BaseDataset):
         )
 
         self.transform = None if opt.phase == 'test' else transform
-        self.resize = A.Compose([A.Resize(opt.size, opt.size)], additional_targets={'other_image': 'image'}) \
-            if opt.size > 0 else None
+        # self.resize = A.Compose([A.Resize(opt.size, opt.size)], additional_targets={'other_image': 'image'}) \
+        #     if opt.size > 0 else None
         self.to_tensor = ToTensor()
         self.nir_channels_only = opt.nir_channels_only
 
     def __getitem__(self, index):
-        idx = str(index).rjust(3, '0')
-        path_rgb = os.path.join(self.root, 'rgb', idx + '.npy')
-        path_msi = os.path.join(self.root, 'msi', idx + '.npy')
-        rgb = np.load(self.rgb_paths[index])
-        msi = np.load(self.msi_paths[index])
+        path_rgb = self.rgb_paths[index]
+        path_msi = self.msi_paths[index]
+        rgb = np.load(path_rgb)
+        msi = np.load(path_msi)
 
         if self.nir_channels_only:
             msi = msi[:, :, [5, 6, 7]]
@@ -46,9 +47,9 @@ class ApplesDataset(BaseDataset):
             transformed = self.transform(image=rgb, other_image=msi)
             rgb, msi = transformed["image"], transformed["other_image"]
 
-        if self.resize is not None:
-            resized = self.resize(image=rgb, other_image=msi)
-            rgb, msi = resized["image"], resized["other_image"]
+        # if self.resize is not None:
+        #     resized = self.resize(image=rgb, other_image=msi)
+        #     rgb, msi = resized["image"], resized["other_image"]
 
         return {'A': self.to_tensor(rgb), 'B': self.to_tensor(msi), 'A_paths': path_rgb, 'B_paths': path_msi}
 
