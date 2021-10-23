@@ -106,14 +106,16 @@ class Pix2PixModel(BaseModel):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
         self.fake_B = self.netG(self.real_A)
 
-    def inference(self, patch_size=256, patch_stride=150, validation_batch_size=2, num_workers=2):
+    def inference(self, patch_size=256, patch_stride=150):
         from dpipe.predict import patches_grid
+        from dpipe.torch import inference_step
+        import numpy as np
 
-        @patches_grid(patch_size, patch_stride, axis=(-1, -2), padding_values=None)
+        @patches_grid(patch_size, patch_stride, axis=(-1, -2), padding_values=np.min)
         def inference(image):
-            return self.netG(image)
+            return inference_step(image, architecture=self.netG)
 
-        self.fake_B = inference(self.real_A)
+        self.fake_B = torch.from_numpy(inference(self.real_A.cpu().numpy()))
 
     def backward_D(self):
         """Calculate GAN loss for the discriminator"""
